@@ -23,8 +23,8 @@ namespace RavenDbBulkInsert
             }.Initialize();
 
             // Create a list of fake employees.
-            //var employees = Builder<Employee>.CreateListOfSize(1000 * 1000)
-            var employees = Builder<Employee>.CreateListOfSize(100)
+            var employees = Builder<Employee>.CreateListOfSize(1000 * 1000)
+            //var employees = Builder<Employee>.CreateListOfSize(100)
                 .All()
                 .With(x => x.FirstName, GetRandom.FirstName())
                 .And(x => x.LastName, GetRandom.LastName())
@@ -32,7 +32,7 @@ namespace RavenDbBulkInsert
 
             Console.WriteLine("Created all fake employees.");
 
-            var batches = employees.Batch(10);
+            var batches = employees.Batch(10000);
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -60,9 +60,14 @@ namespace RavenDbBulkInsert
         {
             using (var operation = documentStore.BulkInsert())
             {
-                var tasks = batch.Select(employee => operation.StoreAsync(employee)).ToArray();
+                foreach (var employee in batch)
+                {
+                    await operation.StoreAsync(employee);
+                }
 
-                await Task.WhenAll(tasks);
+                //var tasks = batch.Select(employee => operation.StoreAsync(employee)).ToArray();
+
+                //await Task.WhenAll(tasks);
             }
         }
     }
